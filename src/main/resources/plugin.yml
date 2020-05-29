@@ -1,0 +1,8 @@
+name: ${project.name}
+version: ${project.version}
+main: dev.jonmarsh.minecartportal.MinecartPortal
+api-version: 1.13
+prefix: ${project.name}
+authors: [j-m]
+description: ${project.description}
+website: ${project.url}
