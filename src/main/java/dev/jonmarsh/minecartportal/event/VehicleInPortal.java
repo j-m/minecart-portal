@@ -16,6 +16,8 @@ import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.vehicle.VehicleMoveEvent;
 import org.bukkit.util.Vector;
 
+import java.util.List;
+
 public class VehicleInPortal implements Listener {
 
     @EventHandler
@@ -55,14 +57,23 @@ public class VehicleInPortal implements Listener {
     private Location calculateNewLocation(final Location location) {
         final World world = location.getWorld() == Config.Overworld ? Config.Nether : Config.Overworld;
         final double x = location.getX() / Config.Scale;
-        final double y = Config.PortalY;
+        final double y = calculateNewYCoordinate(location);
         final double z = location.getZ() / Config.Scale;
         return new Location(world, x, y, z);
+    }
+
+    private double calculateNewYCoordinate(final Location location) {
+        if (Config.MatchPortalY == true) {
+            return location.getY();
+        }
+        if (Config.PortalY > 0) {
+            return Config.PortalY;
+        }
+        return location.getY() / Config.Scale;
     }
 
     public void teleport(final Entity entity, final Location location) {
         Output.ServerLog("Teleporting entity to " + location.getWorld().getName() + " " + location.toVector().toString());
         entity.teleport(location, PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
-
 }

@@ -10,6 +10,7 @@ public final class Config {
     static public String OverworldName = "world";
     static public String NetherName = "world_nether";
     static public int Scale = 8;
+    static public boolean MatchPortalY = false;
     static public int PortalY = 64;
 
     static public World Overworld;
@@ -21,9 +22,11 @@ public final class Config {
         plugin.saveDefaultConfig();
         OverworldName = configuration.getString("Overworld", OverworldName);
         NetherName = configuration.getString("Nether", NetherName);
+        Scale = configuration.getInt("Scale", Scale);
+        MatchPortalY = configuration.getBoolean("MatchPortalY", MatchPortalY);
+        PortalY = configuration.getInt("PortalY", PortalY);
+
         Overworld = getServer().getWorld(OverworldName);
         Nether = getServer().getWorld(NetherName);
-        Scale = configuration.getInt("Scale", Scale);
-        PortalY = configuration.getInt("PortalY", PortalY);
     }
 }
