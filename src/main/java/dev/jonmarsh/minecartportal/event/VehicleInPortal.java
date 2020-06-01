@@ -27,7 +27,7 @@ public class VehicleInPortal implements Listener {
             return;
         }
         Output.ServerLog("Detected a player mount in a portal");
-        new DismountRemount(vehicle).run();
+        DismountRemount.dismount(vehicle);
     }
 
     @EventHandler
@@ -41,7 +41,7 @@ public class VehicleInPortal implements Listener {
             return;
         }
         Output.ServerLog("Detected a vehicle with a passenger in a portal");
-        new DismountRemount(vehicle).run();
+        DismountRemount.dismount(vehicle);
     }
 
     private boolean isPortal(final Location location) {

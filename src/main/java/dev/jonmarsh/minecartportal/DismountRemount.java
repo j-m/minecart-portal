@@ -1,38 +1,43 @@
 package dev.jonmarsh.minecartportal;
 
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.util.Vector;
 
-import java.util.List;
+import java.util.HashMap;
 
-public class DismountRemount implements Runnable {
-    public Entity vehicle;
-    public Location destination;
-    public Vector velocity;
+public final class DismountRemount {
+    public static HashMap<Entity, VehicleInfo> passengerVehiclePair = new HashMap<>();
 
-    public DismountRemount(final Entity vehicle) {
-        this.vehicle = vehicle;
-        this.velocity = vehicle.getVelocity();
-    }
-
-    public void run() {
-        List<Entity> passengers = vehicle.getPassengers();
-        Output.ServerLog("Passenger list: " + passengers);
-
-        for (Entity passenger: vehicle.getPassengers()) {
-            Output.ServerLog("Removing passenger: " + passenger.getName());
-            passenger.leaveVehicle();
+    public static void dismount(Entity vehicle) {
+        if (vehicle.getPortalCooldown() != 0) {
+            Output.ServerLog("Vehicle portal cooldown not reached");
+            return;
         }
 
-        // wait for vehicle and passenger teleport
+        VehicleInfo vehicleInfo = new VehicleInfo(vehicle);
+        Output.ServerLog("Passenger list: " + vehicleInfo.passengers);
 
-        /*for (Entity passenger: passengers) {
-            Output.ServerLog("Adding passenger: " + passenger.getName());
-            vehicle.addPassenger(passenger);
-        }*/
-
-        vehicle.setVelocity(velocity);
+        for (Entity passenger: vehicleInfo.passengers) {
+            Output.ServerLog("Removing passenger: " + passenger.getName());
+            passenger.leaveVehicle();
+            passengerVehiclePair.put(passenger, vehicleInfo);
+        }
+        Output.ServerLog("Velocity: " + vehicleInfo.vehicle.getVelocity());
+        vehicleInfo.vehicle.setVelocity(vehicleInfo.velocity);
+        Output.ServerLog("Velocity: " + vehicleInfo.vehicle.getVelocity());
     }
 
+    public static void remount(Entity passenger) {
+        final VehicleInfo vehicleInfo = passengerVehiclePair.get(passenger);
+        if (vehicleInfo == null) {
+            Output.ServerLog("Did not find a vehicle for: " + passenger);
+            return;
+        }
+        vehicleInfo.vehicle.setPortalCooldown(20);
+        Output.ServerLog("Remounting passenger: " + passenger.getName());
+        passengerVehiclePair.remove(passenger);
+        //passenger.teleport(vehicleInfo.vehicle.getLocation());
+        vehicleInfo.vehicle.addPassenger(passenger);
+
+    }
 }
