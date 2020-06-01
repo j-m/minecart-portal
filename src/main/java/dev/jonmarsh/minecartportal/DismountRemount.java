@@ -6,28 +6,19 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 
-public class VehicleTeleport implements Runnable {
+public class DismountRemount implements Runnable {
     public Entity vehicle;
     public Location destination;
     public Vector velocity;
 
-    public VehicleTeleport(final Entity vehicle, final Location destination) {
+    public DismountRemount(final Entity vehicle) {
         this.vehicle = vehicle;
-        this.destination = destination;
         this.velocity = vehicle.getVelocity();
     }
 
     public void run() {
-        Output.ServerLog("Attempting to teleport entity to '" + destination.getWorld().getName() + "' " + destination.toVector().toString());
-
-        final int cooldown = vehicle.getPortalCooldown();
-        vehicle.setPortalCooldown(20);
-
         List<Entity> passengers = vehicle.getPassengers();
         Output.ServerLog("Passenger list: " + passengers);
-
-//        Output.ServerLog("Ejecting passengers");
-//        vehicle.eject();
 
         for (Entity passenger: vehicle.getPassengers()) {
             Output.ServerLog("Removing passenger: " + passenger.getName());
@@ -42,7 +33,6 @@ public class VehicleTeleport implements Runnable {
         }*/
 
         vehicle.setVelocity(velocity);
-        vehicle.setPortalCooldown(cooldown);
     }
 
 }
