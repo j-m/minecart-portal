@@ -2,6 +2,8 @@ package dev.jonmarsh.minecartportal;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -22,15 +24,19 @@ public final class DismountRemount {
         Output.ServerLog("Passenger list: " + vehicle.getPassengers());
 
         for (Entity passenger: vehicle.getPassengers()) {
-            Output.ServerLog("Removing passenger: " + passenger.getName());
+            Output.ServerLog("Dismounting passenger: " + passenger.getName());
             passengerVehiclePair.put(passenger, vehicle);
             passenger.setPortalCooldown(0);
             passenger.leaveVehicle();
         }
     }
 
+    public static Entity findVehicle(Entity passenger) {
+        return passengerVehiclePair.get(passenger);
+    }
+
     public static void remount(Entity passenger) {
-        Output.ServerLog("Attempt to remount passenger: " + passenger.getName());
+        Output.ServerLog("Attempt to remount passenger: " + passenger);
         final Entity vehicle = passengerVehiclePair.get(passenger);
         if (vehicle == null) {
             Output.ServerLog("Did not find a vehicle for: " + passenger);
@@ -40,9 +46,15 @@ public final class DismountRemount {
         moveVehicleOutOfPortal(vehicle);
 
         Output.ServerLog("Remounting passenger: " + passenger.getName());
+        if (passenger instanceof Player) {
+            Location to = vehicle.getLocation();
+            to.setPitch(passenger.getLocation().getPitch());
+            to.setYaw(passenger.getLocation().getYaw());
+            passenger.teleport(to, PlayerTeleportEvent.TeleportCause.PLUGIN);
+        }
         vehicle.addPassenger(passenger);
         passengerVehiclePair.remove(passenger);
-        passenger.setPortalCooldown(0);
+        passenger.setPortalCooldown(10);
     }
 
     private static void moveVehicleOutOfPortal(final Entity vehicle) {
@@ -61,7 +73,7 @@ public final class DismountRemount {
         Output.ServerLog("Setting vehicle velocity to: " + negatedVehicleVelocity);
         vehicle.setVelocity(negatedVehicleVelocity);
         vehicleVelocityPair.remove(vehicle);
-        vehicle.setPortalCooldown(0);
+        vehicle.setPortalCooldown(10);
     }
 
     private static Vector negateVelocity(final Vector velocity) {

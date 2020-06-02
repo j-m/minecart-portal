@@ -17,17 +17,14 @@ public class VehicleInPortal implements Listener {
 
     @EventHandler
     public void onPlayerMove(final PlayerMoveEvent event) {
-        final Player player = event.getPlayer();
-        final Entity vehicle = player.getVehicle();
-        if (vehicle == null) {
-            return;
-        }
         final Location location = event.getFrom();
         if (!isPortal(location)) {
             return;
         }
-        Output.ServerLog("Detected a player mount in a portal");
-        DismountRemount.dismount(vehicle);
+        Output.ServerLog("Detected a player in a portal through PlayerMoveEvent");
+        final Player player = event.getPlayer();
+        checkIsInVehicle(player);
+        checkWasInVehicle(player);
     }
 
     @EventHandler
@@ -47,5 +44,22 @@ public class VehicleInPortal implements Listener {
     private boolean isPortal(final Location location) {
         final Block portal = location.getBlock();
         return portal.getType() == Material.NETHER_PORTAL;
+    }
+
+    private void checkIsInVehicle(final Player player) {
+        final Entity vehicle = player.getVehicle();
+        if (vehicle == null) {
+            return;
+        }
+        Output.ServerLog("That player /is/ in a vehicle");
+        DismountRemount.dismount(vehicle);
+    }
+
+    private void checkWasInVehicle(final Player player) {
+        if (DismountRemount.findVehicle(player) == null) {
+            return;
+        }
+        Output.ServerLog("That player /was/ in a vehicle");
+        DismountRemount.remount(player);
     }
 }
