@@ -1,5 +1,1 @@
-Overworld: 'world'
-Nether: 'world_nether'
-Scale: 8
-MatchPortalY: true
-PortalY: 64
+MinimumSpeed: 1.5

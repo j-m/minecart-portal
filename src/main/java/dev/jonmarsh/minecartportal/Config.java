@@ -1,32 +1,15 @@
 package dev.jonmarsh.minecartportal;
 
-import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import static org.bukkit.Bukkit.getServer;
-
 public final class Config {
-    static public String OverworldName = "world";
-    static public String NetherName = "world_nether";
-    static public int Scale = 8;
-    static public boolean MatchPortalY = false;
-    static public int PortalY = 64;
-
-    static public World Overworld;
-    static public World Nether;
+    static public double MinimumSpeed = 1.5;
 
     static public void initialise(JavaPlugin plugin) {
         final FileConfiguration configuration = plugin.getConfig();
         configuration.options().copyDefaults();
         plugin.saveDefaultConfig();
-        OverworldName = configuration.getString("Overworld", OverworldName);
-        NetherName = configuration.getString("Nether", NetherName);
-        Scale = configuration.getInt("Scale", Scale);
-        MatchPortalY = configuration.getBoolean("MatchPortalY", MatchPortalY);
-        PortalY = configuration.getInt("PortalY", PortalY);
-
-        Overworld = getServer().getWorld(OverworldName);
-        Nether = getServer().getWorld(NetherName);
+        MinimumSpeed = configuration.getDouble("MinimumSpeed", MinimumSpeed);
     }
 }

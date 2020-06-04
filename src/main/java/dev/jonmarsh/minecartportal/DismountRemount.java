@@ -7,29 +7,35 @@ import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 
-import static java.lang.Math.signum;
+import static java.lang.StrictMath.signum;
 
 public final class DismountRemount {
-    public static HashMap<Entity, VehicleInfo> vehicleVehicleInfoPair = new HashMap<>();
+    private final static HashMap<Entity, VehicleInfo> vehicleVehicleInfoPair = new HashMap<>();
 
-    public static void vehicle(Entity vehicle) {
-        if (vehicleVehicleInfoPair.get(vehicle) == null) {
-            dismount(vehicle);
+    public static void inPortal(final Entity vehicle) {
+        if (vehicle.isEmpty()) {
+            final VehicleInfo vehicleInfo = vehicleVehicleInfoPair.get(vehicle);
+            if (vehicleInfo == null) {
+                Output.ServerLog("Detected a vehicle with NO passenger(s) in a portal via VehicleMoveEvent");
+                DismountRemount.dismount(vehicle);
+            } else {
+                Output.ServerLog("Detected a vehicle that HAD passenger(s) in a portal via VehicleMoveEvent");
+                DismountRemount.remount(vehicle);
+            }
         } else {
-            remount(vehicle);
+            Output.ServerLog("Detected a vehicle with passenger(s) in a portal via VehicleMoveEvent");
+            DismountRemount.dismount(vehicle);
         }
     }
 
-    public static void dismount(Entity vehicle) {
+    private static void dismount(Entity vehicle) {
         if (vehicleVehicleInfoPair.get(vehicle) != null) {
             Output.ServerLog("Vehicle already teleporting");
             return;
         }
+
         final VehicleInfo vehicleInfo = new VehicleInfo(vehicle);
         vehicleVehicleInfoPair.put(vehicle, vehicleInfo);
-
-        Output.ServerLog("Vehicle's velocity before teleport: " + vehicleInfo.velocity.toString());
-        Output.ServerLog("Passenger list: " + vehicleInfo.passengers);
 
         vehicle.setPortalCooldown(0);
         for (Entity passenger: vehicle.getPassengers()) {
@@ -39,58 +45,44 @@ public final class DismountRemount {
         }
     }
 
-    public static void remount(Entity vehicle) {
+    private static void remount(Entity vehicle) {
         final VehicleInfo vehicleInfo = vehicleVehicleInfoPair.get(vehicle);
-        if (vehicleInfo == null) {
-            Output.ServerLog("Vehicle not tracked");
-            return;
-        }
         if (vehicleInfo.from.getWorld() == vehicle.getLocation().getWorld()) {
-            Output.ServerLog("Vehicle not yet teleported");
+            Output.ServerLog("Vehicle not yet teleported. Original: " + vehicleInfo.from.getWorld().getName() + ". Current: " + vehicle.getLocation().getWorld().getName());
+            Output.ServerLog("Setting vehicle velocity to: " + vehicleInfo.velocity);
+            vehicle.setVelocity(vehicleInfo.velocity);
             return;
         }
-
-        Output.ServerLog("Moving vehicle from: " + vehicle.getLocation().toString());
-        vehicle.teleport(locationAddVelocity(vehicle.getLocation(), negateVelocity(velocityDirection(vehicleInfo.velocity))));
-        Output.ServerLog("Moving vehicle to: " + vehicle.getLocation().toString());
-
-        final Vector negatedVehicleVelocity = negateVelocity(vehicleInfo.velocity);
-        Output.ServerLog("Setting vehicle velocity to: " + negatedVehicleVelocity);
-        vehicle.setVelocity(negatedVehicleVelocity);
+        Output.ServerLog("Vehicle has now teleported");
+        Output.ServerLog("Setting vehicle velocity to: " + vehicleInfo.velocity);
+        vehicle.setVelocity(vehicleInfo.velocity);
+        adjustVehiclePosition(vehicle);
 
         for (Entity passenger: vehicleInfo.passengers) {
             Output.ServerLog("Remounting passenger: " + passenger.getName());
             Location to = vehicle.getLocation();
             to.setPitch(passenger.getLocation().getPitch());
-            to.setYaw(passenger.getLocation().getYaw());
+            to.setYaw(passenger.getLocation().getYaw() + 180);
             passenger.teleport(to, PlayerTeleportEvent.TeleportCause.PLUGIN);
             vehicle.addPassenger(passenger);
-            passenger.setPortalCooldown(10);
         }
 
         vehicleVehicleInfoPair.remove(vehicle);
     }
 
-    private static Vector velocityDirection(final Vector velocity) {
-        return new Vector(
-                signum(velocity.getX()),
-                0,
-                signum(velocity.getZ())
-        );
-    }
-
-    private static Vector negateVelocity(final Vector velocity) {
-        return new Vector(
-                velocity.getX() * -1,
-                velocity.getY(),
-                velocity.getZ() * -1
-        );
+    private static void adjustVehiclePosition(final Entity vehicle) {
+        final VehicleInfo vehicleInfo = vehicleVehicleInfoPair.get(vehicle);
+        final double signX = signum(vehicleInfo.velocity.getX());
+        final double signZ = signum(vehicleInfo.velocity.getZ());
+        final Vector adjustment = new Vector(signX, 0, signZ);
+        Output.ServerLog("Adjusting vehicle position by: " + adjustment);
+        vehicle.teleport(locationAddVelocity(vehicle.getLocation(), adjustment));
     }
 
     private static Location locationAddVelocity(final Location location, final Vector velocity) {
         final double x = location.getX() + velocity.getX();
         final double y = location.getY() + velocity.getY();
         final double z = location.getZ() + velocity.getZ();
-        return new Location(location.getWorld(), x, y, z);
+        return new Location(location.getWorld(), x, y, z, location.getYaw(), location.getPitch());
     }
 }
